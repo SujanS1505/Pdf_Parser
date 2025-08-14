@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>USB PD PDF Parser</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    table { border-collapse: collapse; width: 100%; margin-top: 15px; }
+    th, td { border: 1px solid #ccc; padding: 6px; }
+    th { background: #eee; }
+    pre { background: #f9f9f9; padding: 10px; border: 1px solid #ccc; }
+    input { margin-bottom: 10px; }
+  </style>
+</head>
+<body>
+  <h2>USB PD PDF Parser (Flask)</h2>
+  <input type="file" id="pdfFile" accept="application/pdf">
+  <button onclick="uploadPdf()">Upload & Parse</button>
+
+  <h3>Metadata</h3>
+  <pre id="meta"></pre>
+
+  <h3>Table of Contents</h3>
+  <table id="tocTable">
+    <thead>
+      <tr><th>ID</th><th>Title</th><th>Page</th></tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <h3>Sections</h3>
+  <table id="sectionsTable">
+    <thead>
+      <tr><th>ID</th><th>Title</th><th>PDF Page</th></tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+<script>
+async function uploadPdf() {
+  const fileInput = document.getElementById("pdfFile");
+  if (!fileInput.files.length) {
+    alert("Please choose a PDF file");
+    return;
+  }
+  const file = fileInput.files[0];
+  const formData = new FormData();
+  formData.append("file", file);
+
+  try {
+    const res = await fetch("http://localhost:5000/parse-pdf", {
+      method: "POST",
+      body: formData
+    });
+    const data = await res.json();
+
+    // Show metadata
+    document.getElementById("meta").textContent = JSON.stringify(data.metadata, null, 2);
+
+    // Fill TOC table
+    const tocBody = document.querySelector("#tocTable tbody");
+    tocBody.innerHTML = "";
+    data.toc.forEach(row => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td>${row.section_id}</td><td>${row.title}</td><td>${row.page}</td>`;
+      tocBody.appendChild(tr);
+    });
+
+    // Fill Sections table
+    const secBody = document.querySelector("#sectionsTable tbody");
+    secBody.innerHTML = "";
+    data.sections.forEach(row => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td>${row.section_id}</td><td>${row.title}</td><td>${row.pdf_page}</td>`;
+      secBody.appendChild(tr);
+    });
+
+  } catch (err) {
+    alert("Error: " + err);
+  }
+}
+</script>
+</body>
+</html>
