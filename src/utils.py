@@ -1,6 +1,6 @@
 import re, json
 from typing import List, Dict
-from pdfminer.high_level import extract_text
+from PyPDF2 import PdfReader
 
 def clean(s: str) -> str:
     if not isinstance(s, str):
@@ -10,13 +10,18 @@ def clean(s: str) -> str:
     return s.strip()
 
 def extract_pages_text(pdf_path: str, page_indices: List[int]) -> List[str]:
+    """Fast text extraction using PyPDF2."""
     out = []
+    reader = PdfReader(pdf_path)
     for i in page_indices:
+        if i < 0 or i >= len(reader.pages):
+            out.append("")
+            continue
         try:
-            t = extract_text(pdf_path, page_numbers=[i]) or ""
+            txt = reader.pages[i].extract_text() or ""
         except Exception:
-            t = ""
-        out.append(t)
+            txt = ""
+        out.append(txt)
     return out
 
 def write_jsonl(path: str, rows: List[Dict]):
