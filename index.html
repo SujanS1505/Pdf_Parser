@@ -1,84 +1,558 @@
 <!DOCTYPE html>
-<html>
+<html lang="en"></html>
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>USB PD PDF Parser</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
   <style>
-    body { font-family: Arial, sans-serif; margin: 20px; }
-    table { border-collapse: collapse; width: 100%; margin-top: 15px; }
-    th, td { border: 1px solid #ccc; padding: 6px; }
-    th { background: #eee; }
-    pre { background: #f9f9f9; padding: 10px; border: 1px solid #ccc; }
-    input { margin-bottom: 10px; }
+    :root {
+      --primary: #3498db;
+      --secondary: #2ecc71;
+      --dark: #34495e;
+      --light: #ecf0f1;
+      --danger: #e74c3c;
+      --radius: 8px;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f5f7fa;
+      color: #333;
+      transition: all 0.3s ease;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    header {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white;
+      padding: 20px;
+      border-radius: var(--radius);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      margin-bottom: 30px;
+      text-align: center;
+    }
+    
+    h2, h3 {
+      margin-top: 0;
+      color: var(--dark);
+    }
+    
+    .upload-container {
+      background: white;
+      padding: 30px;
+      border-radius: var(--radius);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+      margin-bottom: 20px;
+      text-align: center;
+      transition: all 0.3s ease;
+    }
+    
+    .upload-container:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+    }
+    
+    .file-input-wrapper {
+      position: relative;
+      overflow: hidden;
+      display: inline-block;
+      margin-bottom: 20px;
+    }
+    
+    .file-input-wrapper input[type=file] {
+      position: absolute;
+      left: 0;
+      top: 0;
+      opacity: 0;
+      width: 100%;
+      height: 100%;
+      cursor: pointer;
+    }
+    
+    .file-input-button {
+      background: var(--light);
+      color: var(--dark);
+      padding: 12px 24px;
+      border-radius: var(--radius);
+      cursor: pointer;
+      display: inline-block;
+      transition: all 0.2s ease;
+      border: 2px dashed #ccc;
+    }
+    
+    .file-input-wrapper:hover .file-input-button {
+      background: #ddd;
+    }
+    
+    .upload-btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: var(--radius);
+      cursor: pointer;
+      font-weight: bold;
+      transition: all 0.2s ease;
+    }
+    
+    .upload-btn:hover {
+      background: #2980b9;
+      transform: scale(1.05);
+    }
+    
+    .upload-btn:disabled {
+      background: #95a5a6;
+      cursor: not-allowed;
+    }
+    
+    .section {
+      background: white;
+      padding: 20px;
+      border-radius: var(--radius);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+      margin-bottom: 20px;
+      transition: all 0.3s ease;
+    }
+    
+    .section:hover {
+      box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+    }
+    
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+      cursor: pointer;
+    }
+    
+    .section-content {
+      display: block;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+    }
+    
+    pre {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: var(--radius);
+      overflow-x: auto;
+      border: 1px solid #eee;
+      font-family: monospace;
+    }
+    
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      margin-top: 15px;
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    
+    th, td {
+      border: 1px solid #eee;
+      padding: 12px;
+      text-align: left;
+    }
+    
+    th {
+      background: var(--primary);
+      color: white;
+      position: sticky;
+      top: 0;
+    }
+    
+    tr:nth-child(even) {
+      background-color: #f8f9fa;
+    }
+    
+    tr:hover {
+      background-color: #f1f2f6;
+    }
+    
+    .loading {
+      display: none;
+      text-align: center;
+      padding: 20px;
+    }
+    
+    .spinner {
+      border: 4px solid rgba(0, 0, 0, 0.1);
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border-left-color: var(--primary);
+      animation: spin 1s linear infinite;
+      margin: 0 auto 10px;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    .search-box {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: var(--radius);
+      margin-bottom: 10px;
+      box-sizing: border-box;
+    }
+    
+    .file-name {
+      font-size: 14px;
+      color: #666;
+      margin-top: 5px;
+      display: none;
+    }
+    
+    .tabs {
+      display: flex;
+      margin-bottom: 20px;
+    }
+    
+    .tab {
+      padding: 10px 20px;
+      background: #ddd;
+      border-radius: var(--radius) var(--radius) 0 0;
+      margin-right: 5px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .tab.active {
+      background: var(--primary);
+      color: white;
+    }
+    
+    .tab-content {
+      display: none;
+    }
+    
+    .tab-content.active {
+      display: block;
+    }
+    
+    @media (max-width: 768px) {
+      .container {
+        padding: 10px;
+      }
+    }
   </style>
 </head>
 <body>
-  <h2>USB PD PDF Parser (Flask)</h2>
-  <input type="file" id="pdfFile" accept="application/pdf">
-  <button onclick="uploadPdf()">Upload & Parse</button>
+  <div class="container">
+    <header>
+      <h2><i class="fas fa-file-pdf"></i> USB PD PDF Parser</h2>
+      <p>Upload and analyze USB Power Delivery specification PDFs</p>
+    </header>
 
-  <h3>Metadata</h3>
-  <pre id="meta"></pre>
+    <div class="upload-container">
+      <div class="file-input-wrapper">
+        <div class="file-input-button">
+          <i class="fas fa-cloud-upload-alt"></i> Select PDF File
+        </div>
+        <input type="file" id="pdfFile" accept="application/pdf">
+      </div>
+      <div class="file-name" id="fileName"></div>
+      <button class="upload-btn" id="uploadBtn" onclick="uploadPdf()" disabled>
+        <i class="fas fa-upload"></i> Upload & Parse
+      </button>
+    </div>
+    
+    <div class="loading" id="loadingIndicator">
+      <div class="spinner"></div>
+      <p>Processing PDF, please wait...</p>
+    </div>
 
-  <h3>Table of Contents</h3>
-  <table id="tocTable">
-    <thead>
-      <tr><th>ID</th><th>Title</th><th>Page</th></tr>
-    </thead>
-    <tbody></tbody>
-  </table>
+    <div class="tabs">
+      <div class="tab active" data-tab="metadata">Metadata</div>
+      <div class="tab" data-tab="toc">Table of Contents</div>
+      <div class="tab" data-tab="sections">Sections</div>
+    </div>
 
-  <h3>Sections</h3>
-  <table id="sectionsTable">
-    <thead>
-      <tr><th>ID</th><th>Title</th><th>PDF Page</th></tr>
-    </thead>
-    <tbody></tbody>
-  </table>
+    <div class="tab-content active" id="metadata-content">
+      <div class="section">
+        <div class="section-header">
+          <h3><i class="fas fa-info-circle"></i> Document Metadata</h3>
+          <i class="fas fa-chevron-down"></i>
+        </div>
+        <div class="section-content">
+          <pre id="meta">No data available. Please upload a PDF.</pre>
+        </div>
+      </div>
+    </div>
 
-<script>
-async function uploadPdf() {
-  const fileInput = document.getElementById("pdfFile");
-  if (!fileInput.files.length) {
-    alert("Please choose a PDF file");
-    return;
-  }
-  const file = fileInput.files[0];
-  const formData = new FormData();
-  formData.append("file", file);
+    <div class="tab-content" id="toc-content">
+      <div class="section">
+        <div class="section-header">
+          <h3><i class="fas fa-list"></i> Table of Contents</h3>
+          <i class="fas fa-chevron-down"></i>
+        </div>
+        <div class="section-content">
+          <input type="text" class="search-box" id="tocSearch" placeholder="Search table of contents...">
+          <table id="tocTable">
+            <thead>
+              <tr>
+                <th onclick="sortTable('tocTable', 0)">ID <i class="fas fa-sort"></i></th>
+                <th onclick="sortTable('tocTable', 1)">Title <i class="fas fa-sort"></i></th>
+                <th onclick="sortTable('tocTable', 2)">Page <i class="fas fa-sort"></i></th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
 
-  try {
-    const res = await fetch("http://localhost:5000/parse-pdf", {
-      method: "POST",
-      body: formData
+    <div class="tab-content" id="sections-content">
+      <div class="section">
+        <div class="section-header">
+          <h3><i class="fas fa-book"></i> Document Sections</h3>
+          <i class="fas fa-chevron-down"></i>
+        </div>
+        <div class="section-content">
+          <input type="text" class="search-box" id="sectionsSearch" placeholder="Search sections...">
+          <table id="sectionsTable">
+            <thead>
+              <tr>
+                <th onclick="sortTable('sectionsTable', 0)">ID <i class="fas fa-sort"></i></th>
+                <th onclick="sortTable('sectionsTable', 1)">Title <i class="fas fa-sort"></i></th>
+                <th onclick="sortTable('sectionsTable', 2)">PDF Page <i class="fas fa-sort"></i></th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // File selection handling
+    document.getElementById('pdfFile').addEventListener('change', function(e) {
+      const fileName = e.target.files[0]?.name || '';
+      const fileNameElement = document.getElementById('fileName');
+      const uploadBtn = document.getElementById('uploadBtn');
+      
+      if (fileName) {
+        fileNameElement.textContent = fileName;
+        fileNameElement.style.display = 'block';
+        uploadBtn.disabled = false;
+      } else {
+        fileNameElement.style.display = 'none';
+        uploadBtn.disabled = true;
+      }
     });
-    const data = await res.json();
 
-    // Show metadata
-    document.getElementById("meta").textContent = JSON.stringify(data.metadata, null, 2);
-
-    // Fill TOC table
-    const tocBody = document.querySelector("#tocTable tbody");
-    tocBody.innerHTML = "";
-    data.toc.forEach(row => {
-      const tr = document.createElement("tr");
-      tr.innerHTML = `<td>${row.section_id}</td><td>${row.title}</td><td>${row.page}</td>`;
-      tocBody.appendChild(tr);
+    // Tab switching
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', function() {
+        // Remove active class from all tabs
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        // Add active class to clicked tab
+        this.classList.add('active');
+        
+        // Hide all tab content
+        document.querySelectorAll('.tab-content').forEach(content => {
+          content.classList.remove('active');
+        });
+        
+        // Show corresponding tab content
+        const tabId = this.getAttribute('data-tab');
+        document.getElementById(`${tabId}-content`).classList.add('active');
+      });
     });
 
-    // Fill Sections table
-    const secBody = document.querySelector("#sectionsTable tbody");
-    secBody.innerHTML = "";
-    data.sections.forEach(row => {
-      const tr = document.createElement("tr");
-      tr.innerHTML = `<td>${row.section_id}</td><td>${row.title}</td><td>${row.pdf_page}</td>`;
-      secBody.appendChild(tr);
+    // Section collapsing
+    document.querySelectorAll('.section-header').forEach(header => {
+      header.addEventListener('click', function() {
+        const content = this.nextElementSibling;
+        const icon = this.querySelector('i.fas');
+        
+        if (content.style.maxHeight) {
+          content.style.maxHeight = null;
+          icon.classList.remove('fa-chevron-up');
+          icon.classList.add('fa-chevron-down');
+        } else {
+          content.style.maxHeight = content.scrollHeight + 'px';
+          icon.classList.remove('fa-chevron-down');
+          icon.classList.add('fa-chevron-up');
+        }
+      });
     });
 
-  } catch (err) {
-    alert("Error: " + err);
-  }
-}
-</script>
+    // Table search functionality
+    document.getElementById('tocSearch').addEventListener('keyup', function() {
+      filterTable('tocTable', this.value);
+    });
+    
+    document.getElementById('sectionsSearch').addEventListener('keyup', function() {
+      filterTable('sectionsTable', this.value);
+    });
+
+    function filterTable(tableId, query) {
+      const table = document.getElementById(tableId);
+      const rows = table.getElementsByTagName('tr');
+      
+      for (let i = 1; i < rows.length; i++) {
+        const row = rows[i];
+        const text = row.textContent.toLowerCase();
+        
+        if (text.includes(query.toLowerCase())) {
+          row.style.display = '';
+        } else {
+          row.style.display = 'none';
+        }
+      }
+    }
+
+    // Table sorting
+    function sortTable(tableId, columnIndex) {
+      const table = document.getElementById(tableId);
+      let switching = true;
+      let direction = 'asc';
+      let switchcount = 0;
+      
+      while (switching) {
+        switching = false;
+        const rows = table.rows;
+        
+        for (let i = 1; i < (rows.length - 1); i++) {
+          let shouldSwitch = false;
+          const x = rows[i].getElementsByTagName('td')[columnIndex];
+          const y = rows[i + 1].getElementsByTagName('td')[columnIndex];
+          
+          // Check if numeric column (ID or Page)
+          if (columnIndex === 0 || columnIndex === 2) {
+            const xValue = isNaN(parseInt(x.innerHTML)) ? x.innerHTML : parseInt(x.innerHTML);
+            const yValue = isNaN(parseInt(y.innerHTML)) ? y.innerHTML : parseInt(y.innerHTML);
+            
+            if (direction === 'asc') {
+              if (xValue > yValue) {
+                shouldSwitch = true;
+                break;
+              }
+            } else {
+              if (xValue < yValue) {
+                shouldSwitch = true;
+                break;
+              }
+            }
+          } else {
+            if (direction === 'asc') {
+              if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) {
+                shouldSwitch = true;
+                break;
+              }
+            } else {
+              if (x.innerHTML.toLowerCase() < y.innerHTML.toLowerCase()) {
+                shouldSwitch = true;
+                break;
+              }
+            }
+          }
+        }
+        
+        if (shouldSwitch) {
+          rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+          switching = true;
+          switchcount++;
+        } else {
+          if (switchcount === 0 && direction === 'asc') {
+            direction = 'desc';
+            switching = true;
+          }
+        }
+      }
+      
+      // Update sort icons
+      const headers = table.querySelectorAll('th');
+      headers.forEach((header, index) => {
+        const icon = header.querySelector('i');
+        if (index === columnIndex) {
+          icon.className = direction === 'asc' ? 'fas fa-sort-up' : 'fas fa-sort-down';
+        } else {
+          icon.className = 'fas fa-sort';
+        }
+      });
+    }
+
+    // Upload and parse PDF
+    async function uploadPdf() {
+      const fileInput = document.getElementById("pdfFile");
+      if (!fileInput.files.length) {
+        alert("Please choose a PDF file");
+        return;
+      }
+      
+      const file = fileInput.files[0];
+      const formData = new FormData();
+      formData.append("file", file);
+      
+      // Show loading indicator
+      document.getElementById('loadingIndicator').style.display = 'block';
+      document.getElementById('uploadBtn').disabled = true;
+
+      try {
+        const res = await fetch("http://localhost:5000/parse-pdf", {
+          method: "POST",
+          body: formData
+        });
+        
+        if (!res.ok) {
+          throw new Error(`Server returned ${res.status}: ${res.statusText}`);
+        }
+        
+        const data = await res.json();
+
+        // Show metadata
+        document.getElementById("meta").textContent = JSON.stringify(data.metadata, null, 2);
+
+        // Fill TOC table
+        const tocBody = document.querySelector("#tocTable tbody");
+        tocBody.innerHTML = "";
+        data.toc.forEach(row => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `<td>${row.section_id}</td><td>${row.title}</td><td>${row.page}</td>`;
+          tocBody.appendChild(tr);
+        });
+
+        // Fill Sections table
+        const secBody = document.querySelector("#sectionsTable tbody");
+        secBody.innerHTML = "";
+        data.sections.forEach(row => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `<td>${row.section_id}</td><td>${row.title}</td><td>${row.pdf_page}</td>`;
+          secBody.appendChild(tr);
+        });
+
+        // Ensure content is visible in sections
+        document.querySelectorAll('.section-content').forEach(content => {
+          content.style.maxHeight = content.scrollHeight + 'px';
+          const icon = content.previousElementSibling.querySelector('i.fas');
+          icon.classList.remove('fa-chevron-down');
+          icon.classList.add('fa-chevron-up');
+        });
+
+      } catch (err) {
+        console.error(err);
+        alert("Error: " + err.message);
+      } finally {
+        // Hide loading indicator
+        document.getElementById('loadingIndicator').style.display = 'none';
+        document.getElementById('uploadBtn').disabled = false;
+      }
+    }
+  </script>
 </body>
 </html>
