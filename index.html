@@ -2,65 +2,468 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PDF Parser</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
+    :root {
+      --primary: #4361ee;
+      --primary-light: #4cc9f0;
+      --secondary: #7209b7;
+      --accent: #f72585;
+      --light: #f8f9fa;
+      --dark: #212529;
+      --success: #06d6a0;
+      --warning: #ffd166;
+      --border-radius: 12px;
+      --transition: all 0.3s ease;
+    }
+    
     body {
-      font-family: Arial, sans-serif;
-      margin: 20px;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(135deg, #8BC6EC 0%, #9599E2 100%);
+      background-attachment: fixed;
+      color: var(--dark);
+      transition: var(--transition);
     }
+    
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    
+    header {
+      background: linear-gradient(to right, var(--primary), var(--secondary));
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+      padding: 25px;
+      margin-bottom: 30px;
+      border-radius: 0 0 var(--border-radius) var(--border-radius);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    header::before {
+      content: "";
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: linear-gradient(
+        to bottom right,
+        rgba(255, 255, 255, 0.1) 0%,
+        rgba(255, 255, 255, 0.05) 100%
+      );
+      transform: rotate(30deg);
+      pointer-events: none;
+    }
+    
     h1 {
-      color: #333;
+      color: white;
+      margin: 0;
+      text-align: center;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.2);
     }
+    
+    .card {
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: var(--border-radius);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+      padding: 25px;
+      margin-bottom: 25px;
+      transition: var(--transition);
+      border-left: 5px solid var(--primary);
+    }
+    
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+    }
+    
     .form-section {
       margin-bottom: 20px;
     }
-    input[type="number"] {
-      width: 80px;
+    
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: var(--secondary);
     }
+    
+    input[type="number"] {
+      width: 100px;
+      padding: 12px;
+      border: 2px solid #ddd;
+      border-radius: var(--border-radius);
+      font-size: 16px;
+      transition: var(--transition);
+    }
+    
+    input[type="number"]:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.3);
+      outline: none;
+    }
+    
+    .file-upload {
+      border: 3px dashed #ddd;
+      border-radius: var(--border-radius);
+      padding: 40px;
+      text-align: center;
+      cursor: pointer;
+      transition: var(--transition);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .file-upload::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(45deg, rgba(76, 201, 240, 0.05), rgba(67, 97, 238, 0.05));
+      z-index: -1;
+      opacity: 0;
+      transition: var(--transition);
+    }
+    
+    .file-upload:hover {
+      border-color: var(--primary);
+      transform: scale(1.01);
+    }
+    
+    .file-upload:hover::before {
+      opacity: 1;
+    }
+    
+    .file-upload i {
+      font-size: 60px;
+      color: var(--primary);
+      margin-bottom: 15px;
+      transition: var(--transition);
+    }
+    
+    .file-upload:hover i {
+      transform: translateY(-5px);
+      color: var(--accent);
+    }
+    
+    .file-upload p {
+      margin: 5px 0;
+      color: #666;
+    }
+    
+    .file-name {
+      margin-top: 15px;
+      font-weight: 600;
+      color: var(--primary);
+      background: rgba(67, 97, 238, 0.1);
+      display: inline-block;
+      padding: 8px 16px;
+      border-radius: 20px;
+      transition: var(--transition);
+    }
+    
+    .page-controls {
+      display: flex;
+      gap: 20px;
+      align-items: center;
+      margin: 20px 0;
+      flex-wrap: wrap;
+      background: rgba(255, 255, 255, 0.5);
+      padding: 15px;
+      border-radius: var(--border-radius);
+    }
+    
+    .btn {
+      background: linear-gradient(to right, var(--primary), var(--secondary));
+      color: white;
+      border: none;
+      padding: 14px 28px;
+      border-radius: var(--border-radius);
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+      display: block;
+      width: 100%;
+      position: relative;
+      overflow: hidden;
+      z-index: 1;
+    }
+    
+    .btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 0%;
+      height: 100%;
+      background: linear-gradient(to right, var(--secondary), var(--accent));
+      transition: all 0.5s;
+      z-index: -1;
+    }
+    
+    .btn:hover::before {
+      width: 100%;
+    }
+    
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+    }
+    
+    .btn:active {
+      transform: translateY(1px);
+    }
+    
+    .btn i {
+      margin-right: 8px;
+      transition: var(--transition);
+    }
+    
+    .btn:hover i {
+      transform: rotate(180deg);
+    }
+    
+    .results {
+      background: linear-gradient(to bottom right, var(--light), #e9ecef);
+      border-radius: var(--border-radius);
+      padding: 20px;
+    }
+    
     pre {
-      background: #f4f4f4;
-      padding: 10px;
-      border: 1px solid #ccc;
+      background: #2b2b2b;
+      color: #f8f8f2;
+      padding: 20px;
+      border-radius: var(--border-radius);
       max-height: 400px;
-      overflow-y: scroll;
+      overflow-y: auto;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 14px;
+      white-space: pre-wrap;
+      box-shadow: inset 0 0 10px rgba(0,0,0,0.2);
+    }
+    
+    .loading {
+      display: none;
+      text-align: center;
+      margin: 20px 0;
+    }
+    
+    .spinner {
+      border: 5px solid rgba(0, 0, 0, 0.1);
+      border-radius: 50%;
+      border-top: 5px solid var(--primary);
+      width: 50px;
+      height: 50px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    /* Theme toggle */
+    .theme-toggle {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      font-size: 20px;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+      transition: var(--transition);
+      z-index: 100;
+    }
+    
+    .theme-toggle:hover {
+      transform: scale(1.1);
+    }
+    
+    @media (max-width: 768px) {
+      .container {
+        padding: 10px;
+      }
+      
+      .card {
+        padding: 15px;
+      }
+    }
+    
+    /* Dark mode */
+    body.dark-mode {
+      background: linear-gradient(135deg, #111, #333);
+      color: #f8f9fa;
+    }
+    
+    body.dark-mode .card {
+      background: rgba(40, 40, 40, 0.95);
+      border-left: 5px solid var(--accent);
+    }
+    
+    body.dark-mode label {
+      color: var(--primary-light);
+    }
+    
+    body.dark-mode .file-upload {
+      border-color: #555;
+    }
+    
+    body.dark-mode .file-upload p {
+      color: #bbb;
+    }
+    
+    body.dark-mode .results {
+      background: #333;
+    }
+    
+    body.dark-mode pre {
+      background: #1a1a1a;
     }
   </style>
 </head>
 <body>
-  <h1>PDF Parser</h1>
+  <header>
+    <h1><i class="fas fa-file-pdf"></i> PDF Parser</h1>
+  </header>
 
-  <div class="form-section">
-    <label for="file">Choose PDF: </label>
-    <input type="file" id="file" accept="application/pdf" />
+  <div class="container">
+    <div class="card">
+      <div class="form-section">
+        <label for="file">Upload PDF Document</label>
+        <div class="file-upload" id="dropZone">
+          <i class="fas fa-cloud-upload-alt"></i>
+          <p>Drag & drop your PDF here or click to browse</p>
+          <p class="small">Supported format: PDF</p>
+          <input type="file" id="file" accept="application/pdf" style="display: none;" />
+          <div class="file-name" id="fileName"></div>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <label>Page Range</label>
+        <div class="page-controls">
+          <div>
+            <label for="start">Start Page</label>
+            <input type="number" id="start" value="1" min="1" />
+          </div>
+          <div>
+            <label for="end">End Page</label>
+            <input type="number" id="end" value="10" min="1" />
+          </div>
+          <div>
+            <label for="quality">Extract Quality</label>
+            <select id="quality" style="padding: 12px; border-radius: var(--border-radius); border: 2px solid #ddd;">
+              <option value="low">Low (Faster)</option>
+              <option value="medium" selected>Medium</option>
+              <option value="high">High (Slower)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <button id="uploadBtn" class="btn"><i class="fas fa-cogs"></i> Parse PDF</button>
+    </div>
+
+    <div class="loading" id="loading">
+      <div class="spinner"></div>
+      <p>Processing PDF, please wait...</p>
+    </div>
+
+    <div class="card results">
+      <h2><i class="fas fa-list-alt"></i> Results</h2>
+      <div style="text-align: right; margin-bottom: 10px;">
+        <button id="copyBtn" style="background: var(--primary); color: white; border: none; padding: 8px 16px; border-radius: 20px; cursor: pointer;">
+          <i class="fas fa-copy"></i> Copy
+        </button>
+        <button id="downloadBtn" style="background: var(--success); color: white; border: none; padding: 8px 16px; border-radius: 20px; margin-left: 10px; cursor: pointer;">
+          <i class="fas fa-download"></i> Download
+        </button>
+      </div>
+      <pre id="output">No data yet...</pre>
+    </div>
   </div>
 
-  <div class="form-section">
-    <label for="start">Start Page: </label>
-    <input type="number" id="start" value="1" min="1" />
-    <label for="end">End Page: </label>
-    <input type="number" id="end" value="10" min="1" />
-  </div>
-
-  <button id="uploadBtn">Parse PDF</button>
-
-  <h2>Results</h2>
-  <pre id="output">No data yet...</pre>
+  <button class="theme-toggle" id="themeToggle">
+    <i class="fas fa-moon"></i>
+  </button>
 
   <script>
+    // File upload handling
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('file');
+    const fileName = document.getElementById('fileName');
+    const loading = document.getElementById('loading');
+    
+    dropZone.addEventListener('click', () => fileInput.click());
+    
+    dropZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropZone.style.borderColor = '#4361ee';
+      dropZone.style.transform = 'scale(1.02)';
+    });
+    
+    dropZone.addEventListener('dragleave', () => {
+      dropZone.style.borderColor = document.body.classList.contains('dark-mode') ? '#555' : '#ddd';
+      dropZone.style.transform = 'scale(1)';
+    });
+    
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropZone.style.borderColor = document.body.classList.contains('dark-mode') ? '#555' : '#ddd';
+      dropZone.style.transform = 'scale(1)';
+      
+      if (e.dataTransfer.files.length) {
+        fileInput.files = e.dataTransfer.files;
+        updateFileName();
+      }
+    });
+    
+    fileInput.addEventListener('change', updateFileName);
+    
+    function updateFileName() {
+      if (fileInput.files.length) {
+        fileName.textContent = fileInput.files[0].name;
+        fileName.style.display = 'inline-block';
+      } else {
+        fileName.textContent = '';
+        fileName.style.display = 'none';
+      }
+    }
+    
+    // PDF parsing
     document.getElementById("uploadBtn").addEventListener("click", async () => {
-      const fileInput = document.getElementById("file");
       const startPage = document.getElementById("start").value;
       const endPage = document.getElementById("end").value;
+      const quality = document.getElementById("quality").value;
 
       if (!fileInput.files.length) {
         alert("Please select a PDF file first.");
         return;
       }
 
+      loading.style.display = 'block';
+      document.getElementById("output").textContent = "Processing...";
+      
       const formData = new FormData();
       formData.append("file", fileInput.files[0]);
       formData.append("start_page", startPage);
       formData.append("end_page", endPage);
+      formData.append("quality", quality);
 
       try {
         const res = await fetch("http://127.0.0.1:5000/parse-pdf", {
@@ -72,7 +475,44 @@
         document.getElementById("output").textContent = JSON.stringify(data, null, 2);
       } catch (err) {
         document.getElementById("output").textContent = "Error: " + err;
+      } finally {
+        loading.style.display = 'none';
       }
+    });
+    
+    // Theme toggle
+    const themeToggle = document.getElementById('themeToggle');
+    themeToggle.addEventListener('click', () => {
+      document.body.classList.toggle('dark-mode');
+      const icon = themeToggle.querySelector('i');
+      if (document.body.classList.contains('dark-mode')) {
+        icon.className = 'fas fa-sun';
+      } else {
+        icon.className = 'fas fa-moon';
+      }
+    });
+    
+    // Copy button
+    document.getElementById('copyBtn').addEventListener('click', () => {
+      const output = document.getElementById('output');
+      navigator.clipboard.writeText(output.textContent)
+        .then(() => {
+          alert('Copied to clipboard!');
+        });
+    });
+    
+    // Download button
+    document.getElementById('downloadBtn').addEventListener('click', () => {
+      const output = document.getElementById('output').textContent;
+      const blob = new Blob([output], {type: 'application/json'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'pdf-extract.json';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
     });
   </script>
 </body>
