@@ -1,40 +1,31 @@
-import re
-from typing import List, Dict
-from .utils import clean, extract_pages_text
+from src.parser.pdf_parser import PdfParser
+from src.parser.normalize import normalize_whitespace, normalize_section_id
 
-HEAD_RE = re.compile(r"^\s*(\d+(?:\.\d+)+)\s+([^\n]+?)\s*$", re.M)
 
-def parse_body_sections(pdf_path: str, start_page: int = 40, end_page: int = 300, doc_title: str = "") -> List[Dict]:
-    idxs = list(range(start_page, end_page))
-    pages = extract_pages_text(pdf_path, idxs)
-    rows: List[Dict] = []
-    seen = set()
-    for rel, txt in enumerate(pages):
-        abs_idx = start_page + rel
-        for m in HEAD_RE.finditer(txt):
-            sid, title = m.group(1), clean(m.group(2))
-            title = re.sub(r"\s*Page\s+\d+\s*$", "", title).strip(" .")
-            key = (sid, abs_idx)
-            if key in seen:
+def parse_body_sections(pdf_path: str, start_page: int, end_page: int, doc_title: str):
+    """
+    Parse PDF body pages into structured sections.
+    """
+    parser = PdfParser(pdf_path)
+    sections = []
+
+    for page_num in range(start_page, min(end_page, parser.get_num_pages())):
+        text = parser.extract_text(page_num)
+        if not text:
+            continue
+
+        for line in text.splitlines():
+            clean = normalize_whitespace(line)
+            if not clean or not clean[0].isdigit():
                 continue
-            seen.add(key)
-            level = len(sid.split("."))
-            parent = ".".join(sid.split(".")[:-1]) if "." in sid else None
-            rows.append({
-                "doc_title": doc_title or "USB Power Delivery Specification",
-                "section_id": sid,
+
+            parts = clean.split(" ", 1)
+            section_id = normalize_section_id(parts[0])
+            title = parts[1] if len(parts) > 1 else ""
+            sections.append({
+                "section_id": section_id,
                 "title": title,
-                "full_path": f"{sid} {title}",
-                "page": None,
-                "pdf_page": abs_idx + 1,
-                "level": level,
-                "parent_id": parent,
-                "tags": []
+                "page": page_num
             })
-    # dedupe by section_id, keep earliest pdf_page
-    best = {}
-    for r in rows:
-        sid = r["section_id"]
-        if sid not in best or r["pdf_page"] < best[sid]["pdf_page"]:
-            best[sid] = r
-    return list(best.values())
+
+    return sections
