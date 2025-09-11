@@ -32,15 +32,16 @@ pip install -r requirements.txt
 # Also it generates three json files as output. That is usb_pd_metadata.json, usb_pd_spec.json and usb_pd_toc.json
 
 python app.py "E:\new projects\Pdf_Parser\docs\USB_PD_R3.pdf"
+
 # run this with you current pdf path present in your root directory
 
 ```
 ### 3. Upload pdf via user interface
 ```
-#Run the app
+# Run the app
 python -m app
 
-#Now the backend runs. After this use the go live option to actually access the frontend so that we can upload the PDFs
+# Now the backend runs. After this use the go live option to actually access the frontend so that we can upload the PDFs
 
 
 
